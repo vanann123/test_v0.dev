@@ -1,13 +1,28 @@
 {
-  "version": 2,
-  "installCommand": "npm install",
-  "buildCommand": "npm run build",
   "functions": {
-    "app/**/*.js": {
-      "maxDuration": 10
-    },
-    "pages/api/**/*.js": {
+    "app/api/**/*.js": {
       "maxDuration": 10
     }
-  }
+  },
+  "installCommand": "npm install",
+  "buildCommand": "npm run build",
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        }
+      ]
+    }
+  ]
 }
