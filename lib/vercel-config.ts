@@ -8,7 +8,6 @@ export interface VercelConfig {
     [key: string]: {
       maxDuration?: number;
       memory?: number;
-      runtime?: string;
     };
   };
   env?: Record<string, string>;
@@ -22,47 +21,6 @@ export interface VercelConfig {
       value: string;
     }>;
   }>;
-  redirects?: Array<{
-    source: string;
-    destination: string;
-    permanent?: boolean;
-  }>;
-  rewrites?: Array<{
-    source: string;
-    destination: string;
-  }>;
-}
-
-export const HOBBY_PLAN_LIMITS = {
-  maxFunctions: 12,
-  maxDuration: 10, // seconds
-  maxMemory: 1024, // MB
-  buildMinutes: 6000, // per month
-  bandwidth: 100, // GB per month
-  regions: 1, // single region only
-};
-
-export function validateHobbyPlanConfig(config: VercelConfig): string[] {
-  const errors: string[] = [];
-
-  // Check for conflicting properties
-  if (config.routes && (config.headers || config.redirects || config.rewrites)) {
-    errors.push("Cannot use 'routes' with 'headers', 'redirects', or 'rewrites'");
-  }
-
-  // Check function duration
-  if (config.functions) {
-    Object.entries(config.functions).forEach(([path, func]) => {
-      if (func.maxDuration && func.maxDuration > HOBBY_PLAN_LIMITS.maxDuration) {
-        errors.push(`Function ${path} duration ${func.maxDuration}s exceeds Hobby limit (${HOBBY_PLAN_LIMITS.maxDuration}s)`);
-      }
-      if (func.memory && func.memory > HOBBY_PLAN_LIMITS.maxMemory) {
-        errors.push(`Function ${path} memory ${func.memory}MB exceeds Hobby limit (${HOBBY_PLAN_LIMITS.maxMemory}MB)`);
-      }
-    });
-  }
-
-  return errors;
 }
 
 export function createHobbyPlanConfig(): VercelConfig {
@@ -70,21 +28,20 @@ export function createHobbyPlanConfig(): VercelConfig {
     version: 2,
     buildCommand: "npm run build",
     outputDirectory: ".next",
-    installCommand: "npm ci",
+    installCommand: "npm install",
     framework: "nextjs",
     functions: {
       "app/**/*.tsx": {
-        maxDuration: HOBBY_PLAN_LIMITS.maxDuration,
-        memory: HOBBY_PLAN_LIMITS.maxMemory,
-      },
+        maxDuration: 10, // Hobby plan limit
+      }
     },
     env: {
-      NODE_ENV: "production",
+      NODE_ENV: "production"
     },
     build: {
       env: {
-        NEXT_TELEMETRY_DISABLED: "1",
-      },
+        NEXT_TELEMETRY_DISABLED: "1"
+      }
     },
     headers: [
       {
@@ -92,18 +49,38 @@ export function createHobbyPlanConfig(): VercelConfig {
         headers: [
           {
             key: "X-Content-Type-Options",
-            value: "nosniff",
+            value: "nosniff"
           },
           {
             key: "X-Frame-Options",
-            value: "DENY",
+            value: "DENY"
           },
           {
             key: "X-XSS-Protection",
-            value: "1; mode=block",
-          },
-        ],
-      },
-    ],
+            value: "1; mode=block"
+          }
+        ]
+      }
+    ]
   };
+}
+
+export function validateHobbyPlanConfig(config: VercelConfig): string[] {
+  const errors: string[] = [];
+
+  // Check for multiple regions
+  if ('regions' in config) {
+    errors.push("Multiple regions not supported on Hobby plan");
+  }
+
+  // Check function duration
+  if (config.functions) {
+    Object.values(config.functions).forEach(func => {
+      if (func.maxDuration && func.maxDuration > 10) {
+        errors.push(`Function duration ${func.maxDuration}s exceeds Hobby limit (10s)`);
+      }
+    });
+  }
+
+  return errors;
 }

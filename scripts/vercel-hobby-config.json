@@ -1,24 +1,39 @@
 {
-  "name": "Ball Shooting Game",
-  "description": "Vercel configuration optimized for Hobby plan",
-  "limits": {
-    "functions": 12,
-    "maxDuration": 10,
-    "maxMemory": 1024,
-    "regions": 1,
-    "buildMinutes": 6000
+  "version": 2,
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "functions": {
+    "app/**/*.tsx": {
+      "maxDuration": 10
+    }
   },
-  "recommendations": [
-    "Keep function duration under 10 seconds",
-    "Use single region deployment",
-    "Optimize bundle size for faster builds",
-    "Use environment variables for configuration",
-    "Enable caching for static assets"
-  ],
-  "troubleshooting": {
-    "configConflict": "Remove 'routes' property when using 'headers', 'redirects', or 'rewrites'",
-    "functionTimeout": "Reduce 'maxDuration' to 10 seconds or less",
-    "multipleRegions": "Remove 'regions' property for Hobby plan",
-    "buildFailure": "Check build logs and optimize dependencies"
-  }
+  "env": {
+    "NODE_ENV": "production"
+  },
+  "build": {
+    "env": {
+      "NEXT_TELEMETRY_DISABLED": "1"
+    }
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        }
+      ]
+    }
+  ]
 }
