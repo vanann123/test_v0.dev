@@ -1,60 +1,52 @@
 #!/bin/bash
 
-# Script to check Vercel plan limitations and provide guidance
+echo "📊 Checking Vercel Hobby Plan Limits"
+echo "=================================="
 
-echo "🔍 Checking Vercel plan limitations..."
+# Check function count
+function_count=$(find app -name "*.tsx" -o -name "*.ts" | grep -E "(page|route|api)" | wc -l)
+echo "📁 Functions found: $function_count/12 (Hobby limit)"
 
-# Function to check current plan
-check_plan() {
-    echo "📋 Current Vercel plan limitations for Hobby:"
-    echo "   ✅ Serverless Functions: 12 per deployment"
-    echo "   ✅ Function Duration: 10 seconds max"
-    echo "   ✅ Function Memory: 1024 MB"
-    echo "   ❌ Multiple Regions: Not available"
-    echo "   ❌ Edge Functions: Limited"
-    echo "   ✅ Bandwidth: 100 GB/month"
-    echo "   ✅ Builds: 6,000 minutes/month"
-}
+if [ $function_count -gt 12 ]; then
+    echo "❌ Too many functions for Hobby plan!"
+    echo "💡 Consider combining functions or upgrading to Pro"
+fi
 
-# Function to suggest optimizations
-suggest_optimizations() {
-    echo ""
-    echo "💡 Optimizations for Hobby plan:"
-    echo "   1. Remove 'regions' from vercel.json"
-    echo "   2. Keep function duration ≤ 10 seconds"
-    echo "   3. Optimize bundle size"
-    echo "   4. Use static generation where possible"
-    echo "   5. Minimize API routes"
-}
+# Check build size
+if [ -d ".next" ]; then
+    build_size=$(du -sh .next | cut -f1)
+    echo "📦 Build size: $build_size"
+fi
 
-# Function to check current config
-check_config() {
-    echo ""
-    echo "🔧 Checking current vercel.json configuration..."
+# Check vercel.json configuration
+if [ -f "vercel.json" ]; then
+    echo "⚙️  Vercel configuration:"
     
-    if [ -f "vercel.json" ]; then
-        if grep -q "regions" vercel.json; then
-            echo "   ❌ Found 'regions' property - this will cause deployment failure"
-            echo "   💡 Remove the 'regions' property from vercel.json"
-        else
-            echo "   ✅ No 'regions' property found"
-        fi
-        
-        if grep -q "maxDuration.*[1-9][0-9]" vercel.json; then
-            echo "   ⚠️  Function duration might exceed 10s limit"
-            echo "   💡 Ensure maxDuration ≤ 10 for Hobby plan"
-        else
-            echo "   ✅ Function duration looks good"
-        fi
+    # Check regions
+    if grep -q '"regions"' vercel.json; then
+        echo "❌ Multiple regions not supported on Hobby plan"
+        echo "💡 Remove 'regions' property from vercel.json"
     else
-        echo "   ℹ️  No vercel.json found - using defaults"
+        echo "✅ Single region configuration"
     fi
-}
+    
+    # Check function duration
+    max_duration=$(grep -o '"maxDuration":[[:space:]]*[0-9]*' vercel.json | grep -o '[0-9]*' | head -1)
+    if [ ! -z "$max_duration" ] && [ $max_duration -gt 10 ]; then
+        echo "❌ Function duration ${max_duration}s exceeds Hobby limit (10s)"
+        echo "💡 Reduce maxDuration to 10 or less"
+    else
+        echo "✅ Function duration within limits"
+    fi
+    
+    # Check for conflicting properties
+    if grep -q '"routes"' vercel.json && (grep -q '"headers"' vercel.json || grep -q '"redirects"' vercel.json || grep -q '"rewrites"' vercel.json); then
+        echo "❌ Configuration conflict: Cannot use 'routes' with newer properties"
+        echo "💡 Remove 'routes' property and use 'headers', 'redirects', 'rewrites' instead"
+    else
+        echo "✅ No configuration conflicts"
+    fi
+fi
 
-# Run checks
-check_plan
-suggest_optimizations
-check_config
-
-echo ""
-echo "🎯 Ready to deploy? Run: npm run deploy:hobby"
+echo "=================================="
+echo "🎯 Ready for Hobby plan deployment!"

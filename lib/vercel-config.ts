@@ -1,41 +1,72 @@
-// Vercel configuration utilities for different plans
-
-export interface VercelPlanLimits {
-  maxFunctionDuration: number;
-  maxFunctionMemory: number;
-  maxFunctions: number;
-  supportsMultipleRegions: boolean;
-  supportsEdgeFunctions: boolean;
+export interface VercelConfig {
+  version: number;
+  buildCommand?: string;
+  outputDirectory?: string;
+  installCommand?: string;
+  framework?: string;
+  functions?: {
+    [key: string]: {
+      maxDuration?: number;
+      memory?: number;
+      runtime?: string;
+    };
+  };
+  env?: Record<string, string>;
+  build?: {
+    env?: Record<string, string>;
+  };
+  headers?: Array<{
+    source: string;
+    headers: Array<{
+      key: string;
+      value: string;
+    }>;
+  }>;
+  redirects?: Array<{
+    source: string;
+    destination: string;
+    permanent?: boolean;
+  }>;
+  rewrites?: Array<{
+    source: string;
+    destination: string;
+  }>;
 }
 
-export const VERCEL_PLANS: Record<string, VercelPlanLimits> = {
-  hobby: {
-    maxFunctionDuration: 10, // seconds
-    maxFunctionMemory: 1024, // MB
-    maxFunctions: 12,
-    supportsMultipleRegions: false,
-    supportsEdgeFunctions: false,
-  },
-  pro: {
-    maxFunctionDuration: 60, // seconds
-    maxFunctionMemory: 3008, // MB
-    maxFunctions: 100,
-    supportsMultipleRegions: true,
-    supportsEdgeFunctions: true,
-  },
-  enterprise: {
-    maxFunctionDuration: 900, // seconds (15 minutes)
-    maxFunctionMemory: 3008, // MB
-    maxFunctions: 1000,
-    supportsMultipleRegions: true,
-    supportsEdgeFunctions: true,
-  },
+export const HOBBY_PLAN_LIMITS = {
+  maxFunctions: 12,
+  maxDuration: 10, // seconds
+  maxMemory: 1024, // MB
+  buildMinutes: 6000, // per month
+  bandwidth: 100, // GB per month
+  regions: 1, // single region only
 };
 
-export function generateVercelConfig(plan: keyof typeof VERCEL_PLANS = 'hobby') {
-  const limits = VERCEL_PLANS[plan];
-  
-  const config: any = {
+export function validateHobbyPlanConfig(config: VercelConfig): string[] {
+  const errors: string[] = [];
+
+  // Check for conflicting properties
+  if (config.routes && (config.headers || config.redirects || config.rewrites)) {
+    errors.push("Cannot use 'routes' with 'headers', 'redirects', or 'rewrites'");
+  }
+
+  // Check function duration
+  if (config.functions) {
+    Object.entries(config.functions).forEach(([path, func]) => {
+      if (func.maxDuration && func.maxDuration > HOBBY_PLAN_LIMITS.maxDuration) {
+        errors.push(`Function ${path} duration ${func.maxDuration}s exceeds Hobby limit (${HOBBY_PLAN_LIMITS.maxDuration}s)`);
+      }
+      if (func.memory && func.memory > HOBBY_PLAN_LIMITS.maxMemory) {
+        errors.push(`Function ${path} memory ${func.memory}MB exceeds Hobby limit (${HOBBY_PLAN_LIMITS.maxMemory}MB)`);
+      }
+    });
+  }
+
+  return errors;
+}
+
+export function createHobbyPlanConfig(): VercelConfig {
+  return {
     version: 2,
     buildCommand: "npm run build",
     outputDirectory: ".next",
@@ -43,17 +74,17 @@ export function generateVercelConfig(plan: keyof typeof VERCEL_PLANS = 'hobby') 
     framework: "nextjs",
     functions: {
       "app/**/*.tsx": {
-        maxDuration: Math.min(30, limits.maxFunctionDuration),
-        memory: Math.min(1024, limits.maxFunctionMemory),
-      }
+        maxDuration: HOBBY_PLAN_LIMITS.maxDuration,
+        memory: HOBBY_PLAN_LIMITS.maxMemory,
+      },
     },
     env: {
-      NODE_ENV: "production"
+      NODE_ENV: "production",
     },
     build: {
       env: {
-        NEXT_TELEMETRY_DISABLED: "1"
-      }
+        NEXT_TELEMETRY_DISABLED: "1",
+      },
     },
     headers: [
       {
@@ -61,52 +92,18 @@ export function generateVercelConfig(plan: keyof typeof VERCEL_PLANS = 'hobby') 
         headers: [
           {
             key: "X-Content-Type-Options",
-            value: "nosniff"
+            value: "nosniff",
           },
           {
             key: "X-Frame-Options",
-            value: "DENY"
+            value: "DENY",
           },
           {
             key: "X-XSS-Protection",
-            value: "1; mode=block"
-          }
-        ]
-      }
-    ]
-  };
-
-  // Add regions only for Pro and Enterprise
-  if (limits.supportsMultipleRegions) {
-    config.regions = ["hnd1", "sfo1"];
-  }
-
-  return config;
-}
-
-export function validateConfig(config: any, plan: keyof typeof VERCEL_PLANS = 'hobby') {
-  const limits = VERCEL_PLANS[plan];
-  const issues: string[] = [];
-
-  // Check regions
-  if (config.regions && !limits.supportsMultipleRegions) {
-    issues.push(`Multiple regions not supported on ${plan} plan`);
-  }
-
-  // Check function duration
-  if (config.functions) {
-    Object.values(config.functions).forEach((func: any) => {
-      if (func.maxDuration && func.maxDuration > limits.maxFunctionDuration) {
-        issues.push(`Function duration ${func.maxDuration}s exceeds ${limits.maxFunctionDuration}s limit`);
-      }
-      if (func.memory && func.memory > limits.maxFunctionMemory) {
-        issues.push(`Function memory ${func.memory}MB exceeds ${limits.maxFunctionMemory}MB limit`);
-      }
-    });
-  }
-
-  return {
-    valid: issues.length === 0,
-    issues,
+            value: "1; mode=block",
+          },
+        ],
+      },
+    ],
   };
 }
