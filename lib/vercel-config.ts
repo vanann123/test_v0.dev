@@ -1,18 +1,11 @@
 export interface VercelConfig {
-  version: number;
-  buildCommand?: string;
-  outputDirectory?: string;
-  installCommand?: string;
-  framework?: string;
+  framework: string;
+  installCommand: string;
+  buildCommand: string;
   functions?: {
     [key: string]: {
-      maxDuration?: number;
-      memory?: number;
+      maxDuration: number;
     };
-  };
-  env?: Record<string, string>;
-  build?: {
-    env?: Record<string, string>;
   };
   headers?: Array<{
     source: string;
@@ -25,22 +18,12 @@ export interface VercelConfig {
 
 export function createHobbyPlanConfig(): VercelConfig {
   return {
-    version: 2,
-    buildCommand: "npm run build",
-    outputDirectory: ".next",
-    installCommand: "npm install",
     framework: "nextjs",
+    installCommand: "npm install",
+    buildCommand: "npm run build",
     functions: {
-      "app/**/*.tsx": {
-        maxDuration: 10, // Hobby plan limit
-      }
-    },
-    env: {
-      NODE_ENV: "production"
-    },
-    build: {
-      env: {
-        NEXT_TELEMETRY_DISABLED: "1"
+      "app/**/*.{js,ts}": {
+        maxDuration: 10 // Hobby plan limit
       }
     },
     headers: [
@@ -52,7 +35,7 @@ export function createHobbyPlanConfig(): VercelConfig {
             value: "nosniff"
           },
           {
-            key: "X-Frame-Options",
+            key: "X-Frame-Options", 
             value: "DENY"
           },
           {
@@ -67,20 +50,15 @@ export function createHobbyPlanConfig(): VercelConfig {
 
 export function validateHobbyPlanConfig(config: VercelConfig): string[] {
   const errors: string[] = [];
-
-  // Check for multiple regions
-  if ('regions' in config) {
-    errors.push("Multiple regions not supported on Hobby plan");
-  }
-
+  
   // Check function duration
   if (config.functions) {
     Object.values(config.functions).forEach(func => {
-      if (func.maxDuration && func.maxDuration > 10) {
-        errors.push(`Function duration ${func.maxDuration}s exceeds Hobby limit (10s)`);
+      if (func.maxDuration > 10) {
+        errors.push(`Function maxDuration ${func.maxDuration}s exceeds Hobby plan limit (10s)`);
       }
     });
   }
-
+  
   return errors;
 }

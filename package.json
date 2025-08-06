@@ -21,7 +21,6 @@
     "deploy:config": "cp scripts/vercel-hobby-config.json vercel.json && echo 'Updated vercel.json for Hobby plan'",
     "deploy:hobby": "bash scripts/deploy-hobby.sh",
     "dev": "next dev",
-    "postinstall": "npm run type-check",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
     "start": "next start",

@@ -10,7 +10,7 @@ export function Analytics() {
   useEffect(() => {
     // Track page views
     if (typeof window !== 'undefined' && window.gtag) {
-      window.gtag('config', process.env.NEXT_PUBLIC_GA_ID, {
+      window.gtag('config', process.env.NEXT_PUBLIC_GA_ID || '', {
         page_path: pathname + searchParams.toString(),
       })
     }

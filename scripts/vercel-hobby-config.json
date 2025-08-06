@@ -1,20 +1,11 @@
 {
-  "version": 2,
-  "buildCommand": "npm run build",
-  "outputDirectory": ".next",
-  "installCommand": "npm install",
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
+  "installCommand": "npm install",
+  "buildCommand": "npm run build",
   "functions": {
-    "app/**/*.tsx": {
+    "app/**/*.{js,ts}": {
       "maxDuration": 10
-    }
-  },
-  "env": {
-    "NODE_ENV": "production"
-  },
-  "build": {
-    "env": {
-      "NEXT_TELEMETRY_DISABLED": "1"
     }
   },
   "headers": [
