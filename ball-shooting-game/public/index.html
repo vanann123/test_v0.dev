@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trò Chơi Bắn Bóng</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <h1>🎯 Trò Chơi Bắn Bóng</h1>
+            <div class="game-stats">
+                <div class="stat">
+                    <span class="label">Điểm:</span>
+                    <span id="score">0</span>
+                </div>
+                <div class="stat">
+                    <span class="label">Mạng:</span>
+                    <span id="lives">3</span>
+                </div>
+                <div class="stat">
+                    <span class="label">Level:</span>
+                    <span id="level">1</span>
+                </div>
+            </div>
+        </div>
+        
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <div class="game-controls">
+            <div class="instructions">
+                <p><strong>Cách chơi:</strong></p>
+                <p>• Di chuyển chuột để ngắm</p>
+                <p>• Click chuột trái để bắn</p>
+                <p>• Bắn trúng bóng để ghi điểm</p>
+                <p>• Đừng để bóng chạm đáy!</p>
+            </div>
+            <div class="game-buttons">
+                <button id="startBtn" class="btn btn-primary">Bắt Đầu</button>
+                <button id="pauseBtn" class="btn btn-secondary" disabled>Tạm Dừng</button>
+                <button id="resetBtn" class="btn btn-danger">Chơi Lại</button>
+            </div>
+        </div>
+        
+        <div id="gameOverModal" class="modal hidden">
+            <div class="modal-content">
+                <h2>Game Over!</h2>
+                <p>Điểm số của bạn: <span id="finalScore">0</span></p>
+                <button id="playAgainBtn" class="btn btn-primary">Chơi Lại</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="game.js"></script>
+</body>
+</html>
