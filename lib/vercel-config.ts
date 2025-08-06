@@ -1,64 +1,47 @@
 export interface VercelConfig {
-  framework: string;
-  installCommand: string;
-  buildCommand: string;
+  version: number;
+  installCommand?: string;
+  buildCommand?: string;
   functions?: {
     [key: string]: {
       maxDuration: number;
     };
   };
-  headers?: Array<{
-    source: string;
-    headers: Array<{
-      key: string;
-      value: string;
-    }>;
-  }>;
 }
 
 export function createHobbyPlanConfig(): VercelConfig {
   return {
-    framework: "nextjs",
+    version: 2,
     installCommand: "npm install",
     buildCommand: "npm run build",
     functions: {
-      "app/**/*.{js,ts}": {
-        maxDuration: 10 // Hobby plan limit
+      "app/**/*.js": {
+        maxDuration: 10
+      },
+      "pages/api/**/*.js": {
+        maxDuration: 10
       }
-    },
-    headers: [
-      {
-        source: "/(.*)",
-        headers: [
-          {
-            key: "X-Content-Type-Options",
-            value: "nosniff"
-          },
-          {
-            key: "X-Frame-Options", 
-            value: "DENY"
-          },
-          {
-            key: "X-XSS-Protection",
-            value: "1; mode=block"
-          }
-        ]
-      }
-    ]
+    }
   };
 }
 
-export function validateHobbyPlanConfig(config: VercelConfig): string[] {
-  const errors: string[] = [];
+export function validateHobbyPlanConfig(config: VercelConfig): boolean {
+  // Check for regions (not allowed on Hobby)
+  if ('regions' in config) {
+    console.error('❌ Regions not supported on Hobby plan');
+    return false;
+  }
   
   // Check function duration
   if (config.functions) {
-    Object.values(config.functions).forEach(func => {
-      if (func.maxDuration > 10) {
-        errors.push(`Function maxDuration ${func.maxDuration}s exceeds Hobby plan limit (10s)`);
+    for (const [path, settings] of Object.entries(config.functions)) {
+      if (settings.maxDuration > 10) {
+        console.error(`❌ Function ${path} duration ${settings.maxDuration}s exceeds Hobby limit (10s)`);
+        return false;
       }
-    });
+    }
   }
   
-  return errors;
+  console.log('✅ Configuration valid for Hobby plan');
+  return true;
 }

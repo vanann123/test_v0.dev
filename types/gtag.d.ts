@@ -1,14 +1,13 @@
 declare global {
   interface Window {
     gtag: (
-      command: 'config' | 'event',
-      targetId: string,
+      command: 'config' | 'event' | 'js' | 'set',
+      targetId: string | Date,
       config?: {
-        page_path?: string;
-        event_category?: string;
-        value?: number;
-        event_label?: string;
-        non_interaction?: boolean;
+        page_title?: string;
+        page_location?: string;
+        custom_map?: { [key: string]: string };
+        [key: string]: any;
       }
     ) => void;
   }

@@ -1,32 +1,50 @@
 'use client'
 
-import { useEffect } from 'react'
-import { usePathname, useSearchParams } from 'next/navigation'
+import Script from 'next/script'
 
 export function Analytics() {
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
+  const GA_TRACKING_ID = process.env.NEXT_PUBLIC_GA_ID
 
-  useEffect(() => {
-    // Track page views
+  if (!GA_TRACKING_ID) {
+    return null
+  }
+
+  const handleLoad = () => {
     if (typeof window !== 'undefined' && window.gtag) {
-      window.gtag('config', process.env.NEXT_PUBLIC_GA_ID || '', {
-        page_path: pathname + searchParams.toString(),
-      })
+      window.gtag('js', new Date())
+      window.gtag('config', GA_TRACKING_ID)
     }
-  }, [pathname, searchParams])
+  }
 
-  return null
+  return (
+    <>
+      <Script
+        strategy="afterInteractive"
+        src={`https://www.googletagmanager.com/gtag/js?id=${GA_TRACKING_ID}`}
+      />
+      <Script
+        id="gtag-init"
+        strategy="afterInteractive"
+        onLoad={handleLoad}
+        dangerouslySetInnerHTML={{
+          __html: `
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${GA_TRACKING_ID}');
+          `,
+        }}
+      />
+    </>
+  )
 }
 
-// Web Vitals tracking
-export function reportWebVitals(metric: any) {
+export const trackEvent = (action: string, category: string, label?: string, value?: number) => {
   if (typeof window !== 'undefined' && window.gtag) {
-    window.gtag('event', metric.name, {
-      event_category: 'Web Vitals',
-      value: Math.round(metric.name === 'CLS' ? metric.value * 1000 : metric.value),
-      event_label: metric.id,
-      non_interaction: true,
+    window.gtag('event', action, {
+      event_category: category,
+      event_label: label,
+      value: value,
     })
   }
 }

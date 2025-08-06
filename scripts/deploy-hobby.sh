@@ -1,38 +1,30 @@
 #!/bin/bash
 
-echo "🚀 Deploying to Vercel (Hobby Plan Optimized)"
+echo "🚀 Starting Hobby Plan Deployment..."
 
-# Check if we're in the right directory
-if [ ! -f "package.json" ]; then
-    echo "❌ Error: package.json not found. Make sure you're in the project root."
-    exit 1
+# Check if vercel CLI is installed
+if ! command -v vercel &> /dev/null; then
+    echo "❌ Vercel CLI not found. Installing..."
+    npm install -g vercel
 fi
 
-# Check if vercel.json exists and is valid
-if [ ! -f "vercel.json" ]; then
-    echo "⚠️  Warning: vercel.json not found. Creating optimized config..."
-    cp scripts/vercel-hobby-config.json vercel.json
-fi
+# Clean previous builds
+echo "🧹 Cleaning previous builds..."
+rm -rf .next out
 
-# Generate package-lock.json if it doesn't exist
-if [ ! -f "package-lock.json" ]; then
-    echo "📦 Generating package-lock.json..."
-    npm install --package-lock-only
-fi
-
-# Run type check
-echo "🔍 Running type check..."
+# Check TypeScript
+echo "🔍 Type checking..."
 npm run type-check
 if [ $? -ne 0 ]; then
-    echo "❌ Type check failed. Please fix TypeScript errors before deploying."
+    echo "❌ TypeScript errors found. Please fix them first."
     exit 1
 fi
 
-# Run build locally to catch errors
-echo "🏗️  Testing build locally..."
+# Build locally first
+echo "🔨 Building locally..."
 npm run build
 if [ $? -ne 0 ]; then
-    echo "❌ Build failed locally. Please fix build errors before deploying."
+    echo "❌ Build failed locally. Please fix build errors first."
     exit 1
 fi
 

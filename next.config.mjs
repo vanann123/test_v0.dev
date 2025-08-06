@@ -80,23 +80,7 @@ const nextConfig = {
         permanent: true,
       },
     ]
-  },
-  
-  // Bundle analyzer (only in development)
-  ...(process.env.ANALYZE === 'true' && {
-    webpack: (config, { isServer }) => {
-      if (!isServer) {
-        const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
-        config.plugins.push(
-          new BundleAnalyzerPlugin({
-            analyzerMode: 'static',
-            openAnalyzer: false,
-          })
-        )
-      }
-      return config
-    },
-  }),
+  }
 }
 
 export default nextConfig
